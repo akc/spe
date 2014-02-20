@@ -35,6 +35,7 @@ module Math.Spe
     , list
     , cyc
     , perm
+    , kSubsets
     , subsets
     ) where
 
@@ -175,6 +176,10 @@ cyc (x:xs) = map (x:) $ list xs
 -- cycles.
 perm :: Spe a [[a]]
 perm = map fst . (set `o` cyc)
+
+-- | The species of k element subsets
+kSubsets :: Int -> Spe a ([a], [a])
+kSubsets k = (set `ofSize` k) `mul` set
 
 -- | The species of subsets
 subsets :: Spe a ([a], [a])
