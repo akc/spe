@@ -7,36 +7,14 @@
 
 module Math.Spe
     (
-    -- * The type synonym
+    -- * The species type synonym
       Spe
     -- * Constructions
-    , add
-    , assemble
-    , mul
-    , mulL
-    , prod
-    , prodL
-    , power
-    , powerL
-    , compose
-    , o
-    , kDiff
-    , diff
+    , add, assemble, mul, mulL, prod, prodL, power, powerL
+    , compose, o, kDiff, diff
     -- * Specific species
-    , set
-    , one
-    , x
-    , ofSize
-    , nonEmpty
-    , kBal
-    , bal
-    , par
-    , kList
-    , list
-    , cyc
-    , perm
-    , kSubsets
-    , subsets
+    , set, one, x, ofSize, nonEmpty, kBal, bal, par, kList, list
+    , cyc, perm, kSubsets, subsets
     ) where
 
 import Data.List
@@ -103,7 +81,7 @@ powerL = genericPower splitL
 compose :: Spe [a] b -> Spe a c -> Spe a (b, [c])
 compose f g xs = [ (y, ys) | bs <- par xs, y <- f bs, ys <- mapM g bs ]
 
--- | This is just synonym for `compose`. It is usually used infix.
+-- | This is just a synonym for `compose`. It is usually used infix.
 o = compose
 
 -- | The derivative d^k/dX^k F of a species F

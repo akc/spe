@@ -2,7 +2,7 @@ name:                spe
 version:             0.1.0
 synopsis:            Combinatorial species lite
 
-description:         A very simplistic library for combinatorial species. If you
+description:         A simple library for combinatorial species. If you
 		     want something more substantial, then you will most likely
 		     be happier with the species package by Brent Yorgey:
 		     http://hackage.haskell.org/package/species
@@ -12,7 +12,6 @@ license:             BSD3
 license-file:        LICENSE
 author:              Anders Claesson
 maintainer:          anders.claesson@gmail.com
--- copyright:           
 category:            Math
 build-type:          Simple
 cabal-version:       >=1.8
@@ -23,5 +22,4 @@ source-repository head
 
 library
   exposed-modules:     Math.Spe
-  -- other-modules:       
   build-depends:       base >=4.5 && <5
