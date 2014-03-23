@@ -13,8 +13,8 @@ module Math.Spe
     , add, assemble, mul, mulL, prod, prodL, power, powerL
     , compose, o, kDiff, diff
     -- * Specific species
-    , set, one, x, ofSize, nonEmpty, kBal, bal, par, kList, list
-    , cyc, perm, kSubsets, subsets, bTree
+    , set, one, x, ofSize, nonempty, kBal, bal, par, kList, list
+    , cyc, perm, kSubset, subset, btree
     ) where
 
 import Data.List
@@ -119,14 +119,14 @@ isOfLength :: [a] -> Int -> Bool
 (x:xs) `isOfLength` n = n > 0 && xs `isOfLength` (n-1)
 
 -- | No structure on the empty set, but otherwise the same.
-nonEmpty :: Spe a c -> Spe a c
-nonEmpty _ [] = []
-nonEmpty f xs = f xs
+nonempty :: Spe a c -> Spe a c
+nonempty _ [] = []
+nonempty f xs = f xs
 
 -- | The species of ballots with k blocks
 kBal :: Int -> Spe a [[a]]
 kBal 0 = \xs -> [ [] | null xs ]
-kBal k = nonEmpty set `power` k
+kBal k = nonempty set `power` k
 
 -- | The species of ballots
 bal :: Spe a [[a]]
@@ -158,14 +158,14 @@ perm :: Spe a [[a]]
 perm = map fst . (set `o` cyc)
 
 -- | The species of k element subsets
-kSubsets :: Int -> Spe a ([a], [a])
-kSubsets k = (set `ofSize` k) `mul` set
+kSubset :: Int -> Spe a ([a], [a])
+kSubset k = (set `ofSize` k) `mul` set
 
 -- | The species of subsets
-subsets :: Spe a ([a], [a])
-subsets = set `mul` set
+subset :: Spe a ([a], [a])
+subset = set `mul` set
 
 -- | The species of binary trees
-bTree :: Spe a (BTree a)
-bTree [] = [ Empty ]
-bTree xs = [ BNode a t1 t2 | ([a],(t1,t2)) <- (x `mul` (bTree `mul` bTree)) xs ]
+btree :: Spe a (BTree a)
+btree [] = [ Empty ]
+btree xs = [ BNode a t1 t2 | ([a],(t1,t2)) <- (x `mul` (btree `mul` btree)) xs ]
