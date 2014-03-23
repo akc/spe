@@ -14,7 +14,7 @@ module Math.Spe
     , compose, o, kDiff, diff
     -- * Specific species
     , set, one, x, ofSize, nonEmpty, kBal, bal, par, kList, list
-    , cyc, perm, kSubsets, subsets
+    , cyc, perm, kSubsets, subsets, bTree
     ) where
 
 import Data.List
@@ -23,6 +23,8 @@ import Data.List
 type Spe a c = [a] -> [c]
 
 type Splitter a = [a] -> [([a], [a])]
+
+data BTree a = Empty | BNode a (BTree a) (BTree a) deriving (Show, Eq)
 
 decompose :: Splitter a -> Int -> [a] -> [[[a]]]
 decompose _ 0 [] = [[]]
@@ -162,3 +164,8 @@ kSubsets k = (set `ofSize` k) `mul` set
 -- | The species of subsets
 subsets :: Spe a ([a], [a])
 subsets = set `mul` set
+
+-- | The species of binary trees
+bTree :: Spe a (BTree a)
+bTree [] = [ Empty ]
+bTree xs = [ BNode a t1 t2 | ([a],(t1,t2)) <- (x `mul` (bTree `mul` bTree)) xs ]
