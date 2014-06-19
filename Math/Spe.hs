@@ -8,7 +8,7 @@
 module Math.Spe
     (
     -- * The species type synonym
-      Spe
+      Spe, BTree (..)
     -- * Constructions
     , add, assemble, mul, mulL, prod, prodL, power, powerL
     , compose, o, kDiff, diff
@@ -19,11 +19,13 @@ module Math.Spe
 
 import Data.List
 
--- | A species is a functor. We approximate this by a function as defined.
+-- | A species is an endofunctor on finite sets with bijections. We
+-- approximate this by a function as defined.
 type Spe a c = [a] -> [c]
 
 type Splitter a = [a] -> [([a], [a])]
 
+-- | Binary trees
 data BTree a = Empty | BNode a (BTree a) (BTree a) deriving (Show, Eq)
 
 decompose :: Splitter a -> Int -> [a] -> [[[a]]]
