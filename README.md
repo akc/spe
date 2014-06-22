@@ -1,8 +1,10 @@
 # The `spe` package &mdash; species lite
 
-A simple library for combinatorial species. For more information see the
+A simple library for combinatorial species. For a quick taste look at
+the examples below. For more information see the
 [reference documentation](http://hackage.haskell.org/package/spe)
-on Hackage.
+on Hackage, and the full (but short!) source code:
+[Math/Spe.hs](https://github.com/akc/spe/blob/master/Math/Spe.hs).
 
 If you want something more substantial, then you will most likely be
 happier with the
