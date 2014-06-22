@@ -27,7 +27,7 @@ data BTree a = Empty | BNode a (BTree a) (BTree a) deriving (Show, Eq)
 btree :: Spe a (BTree a)
 btree [] = [ Empty ]
 btree xs = [ BNode v l r
-           | (v,(l,r)) <- x `mul` (btree `mul` btree) $ xs
+           | (v,(l,r)) <- x .*. (btree .*. btree) $ xs
            ]
 ```
 

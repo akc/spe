@@ -10,7 +10,7 @@ module Math.Spe
     -- * The species type synonym
       Spe
     -- * Constructions
-    , add, assemble, mul, mulL, prod, prodL, power, powerL
+    , (.+.), assemble, (.*.), (<*), prod, prodL, (.^), powerL
     , compose, o, kDiff, diff
     -- * Specific species
     , set, one, x, ofSize, nonEmpty, kBal, bal, par, kList, list
@@ -19,8 +19,9 @@ module Math.Spe
 
 import Data.List
 
-infixl 6 `add`
-infixl 7 `mul`
+infixl 6 .+.
+infixl 7 .*.
+infixr 8 .^
 
 -- | A
 -- <https://en.wikipedia.org/wiki/Combinatorial_species combinatorial species>
@@ -35,69 +36,70 @@ decompose _ 0 [] = [[]]
 decompose _ 0 _  = []
 decompose h k xs = [ b:bs | (b,ys) <- h xs, bs <- decompose h (k-1) ys ]
 
--- A splitter for L-species
+-- A splitter for L-species.
 splitL :: Splitter a
 splitL [] = [([], [])]
 splitL xs@(x:xt) = ([], xs) : [ (x:as, bs) | (as, bs) <- splitL xt ]
 
--- A splitter for B-species
+-- A splitter for B-species.
 splitB :: Splitter a
 splitB [] = [([], [])]
 splitB (x:xs) = splitB xs >>= \(ys, zs) -> [(x:ys, zs), (ys, x:zs)]
 
--- | Species addition
-add :: Spe a b -> Spe a c -> Spe a (Either b c)
-add f g xs = map Left (f xs) ++ map Right (g xs)
+-- | Species addition.
+(.+.) :: Spe a b -> Spe a c -> Spe a (Either b c)
+(.+.) f g xs = map Left (f xs) ++ map Right (g xs)
 
--- | The sum of a list of species of the same type
+-- | The sum of a list of species of the same type.
 assemble :: [Spe a c] -> Spe a c
 assemble fs xs = fs >>= \f -> f xs
 
--- Species multiplication
 genericMul :: Splitter a -> Spe a b -> Spe a c -> Spe a (b,c)
 genericMul h f g xs = [ (y, z) | (ys, zs) <- h xs, y <- f ys, z <- g zs ]
 
--- | Species multiplication
-mul = genericMul splitB
+-- | Species multiplication.
+(.*.) = genericMul splitB
 
--- | Ordinal L-species multiplication
-mulL = genericMul splitL
+-- | Ordinal L-species multiplication. Give that the underlying set is
+-- sorted , elements in the left factor will be smaller than those in
+-- the right factor.
+(<*) = genericMul splitL
 
 genericProd :: Splitter a -> [Spe a b] -> Spe a [b]
 genericProd h fs xs =
     let n = length fs
     in [ zipWith ($) fs bs | bs <- decompose h n xs ] >>= sequence
 
--- | The product of a list of species
+-- | The product of a list of species.
 prod = genericProd splitB
 
--- | The ordinal product of a list of L-species
+-- | The ordinal product of a list of L-species.
 prodL = genericProd splitL
 
 genericPower :: Splitter a -> Spe a b -> Int -> Spe a [b]
 genericPower h f k = genericProd h $ replicate k f
 
--- | The power F^k for species F
-power = genericPower splitB
+-- | The power F^k for species F.
+(.^) = genericPower splitB
 
--- | The ordinal power F^k for L-species F
+-- | The ordinal power F^k for L-species F.
 powerL = genericPower splitL
 
--- | The composition F(G) of two species F and G
+-- | The composition F(G) of two species F and G.
 compose :: Spe [a] b -> Spe a c -> Spe a (b, [c])
 compose f g xs = [ (y, ys) | bs <- par xs, y <- f bs, ys <- mapM g bs ]
 
 -- | This is just a synonym for `compose`. It is usually used infix.
 o = compose
 
--- | The derivative d^k/dX^k F of a species F
+-- | The derivative d^k/dX^k F of a species F.
 kDiff :: Int -> Spe (Maybe a) b -> Spe a b
 kDiff k f xs = f $ replicate k Nothing ++ map Just xs
 
--- | The first derivative
+-- | The first derivative.
 diff = kDiff 1
 
--- | The species of sets
+-- | The species of sets.
 set :: Spe a [a]
 set = return
 
@@ -106,7 +108,7 @@ set = return
 one :: Spe a ()
 one xs = [ () | null xs ]
 
--- | The singleton species
+-- | The singleton species.
 x :: Spe a a
 x = id `ofSize` 1
 
@@ -115,7 +117,7 @@ ofSize :: Spe a c -> Int -> Spe a c
 (f `ofSize` n) xs | xs `isOfLength` n = f xs
                   | otherwise         = []
 
--- Like length xs == n, but lazy
+-- Like length xs == n, but lazy.
 isOfLength :: [a] -> Int -> Bool
 []     `isOfLength` n = n == 0
 (x:xs) `isOfLength` n = n > 0 && xs `isOfLength` (n-1)
@@ -128,27 +130,27 @@ nonEmpty f xs = f xs
 -- | The species of ballots with k blocks
 kBal :: Int -> Spe a [[a]]
 kBal 0 = \xs -> [ [] | null xs ]
-kBal k = nonEmpty set `power` k
+kBal k = nonEmpty set .^ k
 
--- | The species of ballots
+-- | The species of ballots.
 bal :: Spe a [[a]]
 bal [] = [[]]
 bal xs = [ b:bs | (b, ys) <- init (splitB xs), bs <- bal ys ]
 
--- | The species of set partitions
+-- | The species of set partitions.
 par :: Spe a [[a]]
 par [] = [[]]
 par (x:xs) = [ (x:b) : bs | (b, ys) <- splitB xs, bs <- par ys ]
 
--- | The species of lists (linear orders) with k elements
+-- | The species of lists (linear orders) with k elements.
 kList :: Int -> Spe a [a]
-kList k = x `power` k
+kList k = x .^ k
 
--- | The species of lists
+-- | The species of lists (linear orders)
 list :: Spe a [a]
 list xs = kList (length xs) xs
 
--- | The species of cycles
+-- | The species of cycles.
 cyc :: Spe a [a]
 cyc [] = []
 cyc (x:xs) = map (x:) $ list xs
@@ -158,10 +160,10 @@ cyc (x:xs) = map (x:) $ list xs
 perm :: Spe a [[a]]
 perm = map fst . (set `o` cyc)
 
--- | The species of k element subsets
+-- | The species of k element subsets.
 kSubset :: Int -> Spe a ([a], [a])
-kSubset k = (set `ofSize` k) `mul` set
+kSubset k = (set `ofSize` k) .*. set
 
--- | The species of subsets
+-- | The species of subsets.
 subset :: Spe a [a]
-subset = map fst . (set `mul` set)
+subset = map fst . (set .*. set)
