@@ -17,7 +17,7 @@ by Brent Yorgey.
 
 An octopus is a cycle of nonempty lists:
 ```haskell
-oct = cyc `o` nonempty list
+oct = cyc `o` nonEmpty list
 ```
 
 ### Binary trees
