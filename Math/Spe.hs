@@ -8,25 +8,27 @@
 module Math.Spe
     (
     -- * The species type synonym
-      Spe, BTree (..)
+      Spe
     -- * Constructions
     , add, assemble, mul, mulL, prod, prodL, power, powerL
     , compose, o, kDiff, diff
     -- * Specific species
-    , set, one, x, ofSize, nonempty, kBal, bal, par, kList, list
-    , cyc, perm, kSubset, subset, btree
+    , set, one, x, ofSize, nonEmpty, kBal, bal, par, kList, list
+    , cyc, perm, kSubset, subset
     ) where
 
 import Data.List
 
--- | A species is an endofunctor on finite sets with bijections. We
+infixl 6 `add`
+infixl 7 `mul`
+
+-- | A
+-- <https://en.wikipedia.org/wiki/Combinatorial_species combinatorial species>
+-- is an endofunctor on the category of finite sets and bijections. We
 -- approximate this by a function as defined.
 type Spe a c = [a] -> [c]
 
 type Splitter a = [a] -> [([a], [a])]
-
--- | Binary trees
-data BTree a = Empty | BNode a (BTree a) (BTree a) deriving (Show, Eq)
 
 decompose :: Splitter a -> Int -> [a] -> [[[a]]]
 decompose _ 0 [] = [[]]
@@ -101,14 +103,12 @@ set = return
 
 -- | The species characteristic of the empty set; the identity with
 -- respect to species multiplication.
-one :: Spe a [a]
-one [] = [[]]
-one _  = []
+one :: Spe a ()
+one xs = [ () | null xs ]
 
 -- | The singleton species
-x :: Spe a [a]
-x xs@[_] = [xs]
-x _      = []
+x :: Spe a a
+x = id `ofSize` 1
 
 -- | f `ofSize` n is like f on n element sets, but empty otherwise.
 ofSize :: Spe a c -> Int -> Spe a c
@@ -121,14 +121,14 @@ isOfLength :: [a] -> Int -> Bool
 (x:xs) `isOfLength` n = n > 0 && xs `isOfLength` (n-1)
 
 -- | No structure on the empty set, but otherwise the same.
-nonempty :: Spe a c -> Spe a c
-nonempty _ [] = []
-nonempty f xs = f xs
+nonEmpty :: Spe a c -> Spe a c
+nonEmpty _ [] = []
+nonEmpty f xs = f xs
 
 -- | The species of ballots with k blocks
 kBal :: Int -> Spe a [[a]]
 kBal 0 = \xs -> [ [] | null xs ]
-kBal k = nonempty set `power` k
+kBal k = nonEmpty set `power` k
 
 -- | The species of ballots
 bal :: Spe a [[a]]
@@ -142,8 +142,7 @@ par (x:xs) = [ (x:b) : bs | (b, ys) <- splitB xs, bs <- par ys ]
 
 -- | The species of lists (linear orders) with k elements
 kList :: Int -> Spe a [a]
-kList 0 = one
-kList k = map concat . (x `power` k)
+kList k = x `power` k
 
 -- | The species of lists
 list :: Spe a [a]
@@ -164,10 +163,5 @@ kSubset :: Int -> Spe a ([a], [a])
 kSubset k = (set `ofSize` k) `mul` set
 
 -- | The species of subsets
-subset :: Spe a ([a], [a])
-subset = set `mul` set
-
--- | The species of binary trees
-btree :: Spe a (BTree a)
-btree [] = [ Empty ]
-btree xs = [ BNode a t1 t2 | ([a],(t1,t2)) <- (x `mul` (btree `mul` btree)) xs ]
+subset :: Spe a [a]
+subset = map fst . (set `mul` set)
