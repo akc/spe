@@ -20,12 +20,24 @@ An octopus is a cycle of nonempty lists:
 oct = cyc `o` nonEmpty list
 ```
 
+### Connected lists
+
+A connected list is a nonempty list that begins with its smallest
+element. E.g, `[3,5,9,7]` is connected but `[2,4,1]` is not. Using the
+ordinal product we can define the L-species of connected lists by
+```haskell
+listc = x <*. list
+```
+in which `x` is the singleton species. Can you explain why the species
+`list` and `` set `o` listc `` are isomorphic?
+
 ### Binary trees
+
+Here's an example of a recursively defined species.
 
 ```haskell
 data BTree a = Empty | BNode a (BTree a) (BTree a) deriving (Show, Eq)
 
--- The species of binary trees
 btree :: Spe a (BTree a)
 btree [] = [ Empty ]
 btree xs = [ BNode v l r
@@ -33,7 +45,7 @@ btree xs = [ BNode v l r
            ]
 ```
 
-### A combinatorial equality
+### Derivatives
 
 The following expression evaluates to true and illustrates that the
 derivative of the species of cycles is isomorphic to the species of

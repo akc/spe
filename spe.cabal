@@ -1,5 +1,5 @@
 name:                spe
-version:             0.4
+version:             0.5
 synopsis:            Combinatorial species lite
 
 description:         A simple library for combinatorial species with no
