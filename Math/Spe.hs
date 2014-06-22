@@ -10,8 +10,8 @@ module Math.Spe
     -- * The species type synonym
       Spe
     -- * Constructions
-    , (.+.), assemble, (.*.), (<*.), prod, prodL, (.^), powerL, compose, o
-    , kDiff, diff, ofSize, nonEmpty
+    , (.+.), assemble, (.*.), (<*.), prod, ordinalProd, (.^), (<^)
+    , compose, o , kDiff, diff, ofSize, nonEmpty
     -- * Specific species
     , set, one, x, kBal, bal, par, kList, list, cyc, perm, kSubset, subset
     ) where
@@ -22,6 +22,7 @@ infixl 6 .+.
 infixl 7 .*.
 infixl 7 <*.
 infixr 8 .^
+infixr 8 <^
 
 -- The species type synonym
 -- ------------------------
@@ -80,7 +81,7 @@ genericProd h fs xs =
 prod = genericProd splitB
 
 -- | The ordinal product of a list of L-species.
-prodL = genericProd splitL
+ordinalProd = genericProd splitL
 
 genericPower :: Splitter a -> Spe a b -> Int -> Spe a [b]
 genericPower h f k = genericProd h $ replicate k f
@@ -89,7 +90,7 @@ genericPower h f k = genericProd h $ replicate k f
 (.^) = genericPower splitB
 
 -- | The ordinal power F^k for L-species F.
-powerL = genericPower splitL
+(<^) = genericPower splitL
 
 -- | The composition F(G) of two species F and G.
 compose :: Spe [a] b -> Spe a c -> Spe a (b, [c])
