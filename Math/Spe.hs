@@ -10,7 +10,7 @@ module Math.Spe
     -- * The species type synonym
       Spe
     -- * Constructions
-    , (.+.), assemble, (.*.), (<*), prod, prodL, (.^), powerL, compose, o
+    , (.+.), assemble, (.*.), (<*.), prod, prodL, (.^), powerL, compose, o
     , kDiff, diff, ofSize, nonEmpty
     -- * Specific species
     , set, one, x, kBal, bal, par, kList, list, cyc, perm, kSubset, subset
@@ -20,6 +20,7 @@ import Data.List
 
 infixl 6 .+.
 infixl 7 .*.
+infixl 7 <*.
 infixr 8 .^
 
 -- The species type synonym
@@ -68,7 +69,7 @@ genericMul h f g xs = [ (y, z) | (ys, zs) <- h xs, y <- f ys, z <- g zs ]
 -- | Ordinal L-species multiplication. Give that the underlying set is
 -- sorted , elements in the left factor will be smaller than those in
 -- the right factor.
-(<*) = genericMul splitL
+(<*.) = genericMul splitL
 
 genericProd :: Splitter a -> [Spe a b] -> Spe a [b]
 genericProd h fs xs =
