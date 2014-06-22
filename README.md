@@ -7,7 +7,7 @@ on Hackage, and the full (but short!) source code:
 [Math/Spe.hs](https://github.com/akc/spe/blob/master/Math/Spe.hs).
 
 If you want something more substantial, then you will most likely be
-happier with the
+happier with the excellent
 [`species` package](http://hackage.haskell.org/package/species)
 by Brent Yorgey.
 
