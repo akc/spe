@@ -10,11 +10,10 @@ module Math.Spe
     -- * The species type synonym
       Spe
     -- * Constructions
-    , (.+.), assemble, (.*.), (<*), prod, prodL, (.^), powerL
-    , compose, o, kDiff, diff
+    , (.+.), assemble, (.*.), (<*), prod, prodL, (.^), powerL, compose, o
+    , kDiff, diff, ofSize, nonEmpty
     -- * Specific species
-    , set, one, x, ofSize, nonEmpty, kBal, bal, par, kList, list
-    , cyc, perm, kSubset, subset
+    , set, one, x, kBal, bal, par, kList, list, cyc, perm, kSubset, subset
     ) where
 
 import Data.List
@@ -23,6 +22,9 @@ infixl 6 .+.
 infixl 7 .*.
 infixr 8 .^
 
+-- The species type synonym
+-- ------------------------
+
 -- | A
 -- <https://en.wikipedia.org/wiki/Combinatorial_species combinatorial species>
 -- is an endofunctor on the category of finite sets and bijections. We
@@ -30,6 +32,9 @@ infixr 8 .^
 type Spe a c = [a] -> [c]
 
 type Splitter a = [a] -> [([a], [a])]
+
+-- Constructions
+-- -------------
 
 decompose :: Splitter a -> Int -> [a] -> [[[a]]]
 decompose _ 0 [] = [[]]
@@ -99,6 +104,25 @@ kDiff k f xs = f $ replicate k Nothing ++ map Just xs
 -- | The first derivative.
 diff = kDiff 1
 
+-- Like length xs == n, but lazy.
+isOfLength :: [a] -> Int -> Bool
+[]     `isOfLength` n = n == 0
+(x:xs) `isOfLength` n = n > 0 && xs `isOfLength` (n-1)
+
+-- | f `ofSize` n is like f on n element sets, but empty otherwise.
+ofSize :: Spe a c -> Int -> Spe a c
+(f `ofSize` n) xs | xs `isOfLength` n = f xs
+                  | otherwise         = []
+
+-- | No structure on the empty set, but otherwise the same.
+nonEmpty :: Spe a c -> Spe a c
+nonEmpty _ [] = []
+nonEmpty f xs = f xs
+
+
+-- Specific species
+-- ----------------
+
 -- | The species of sets.
 set :: Spe a [a]
 set = return
@@ -111,21 +135,6 @@ one xs = [ () | null xs ]
 -- | The singleton species.
 x :: Spe a a
 x = id `ofSize` 1
-
--- | f `ofSize` n is like f on n element sets, but empty otherwise.
-ofSize :: Spe a c -> Int -> Spe a c
-(f `ofSize` n) xs | xs `isOfLength` n = f xs
-                  | otherwise         = []
-
--- Like length xs == n, but lazy.
-isOfLength :: [a] -> Int -> Bool
-[]     `isOfLength` n = n == 0
-(x:xs) `isOfLength` n = n > 0 && xs `isOfLength` (n-1)
-
--- | No structure on the empty set, but otherwise the same.
-nonEmpty :: Spe a c -> Spe a c
-nonEmpty _ [] = []
-nonEmpty f xs = f xs
 
 -- | The species of ballots with k blocks
 kBal :: Int -> Spe a [[a]]
