@@ -25,9 +25,11 @@ oct = cyc `o` nonEmpty list
 A connected list is a nonempty list that begins with its smallest
 element. E.g, `[3,5,9,7]` is connected but `[2,4,1]` is not. Using the
 ordinal product we can define the L-species of connected lists by
+
 ```haskell
 listc = x <*. list
 ```
+
 in which `x` is the singleton species. Can you explain why the species
 `list` and `` set `o` listc `` are isomorphic?
 
@@ -50,6 +52,7 @@ btree xs = [ BNode v l r
 The following expression evaluates to true and illustrates that the
 derivative of the species of cycles is isomorphic to the species of
 lists (linear orders):
+
 ```haskell
 (map catMaybes $ diff cyc [1..5]) == list [1..5]
 ```
@@ -57,7 +60,8 @@ lists (linear orders):
 ### Ballot matrices
 
 A ballot (or ordered set partition) is a list of blocks, where a block
-is simply a nonempty set. So may give it this type
+is simply a nonempty set.
+
 ```haskell
 type Bal a = [[a]]
 ```
@@ -78,7 +82,7 @@ The species of ballots is already defined in
 [Math/Spe.hs](https://github.com/akc/spe/blob/master/Math/Spe.hs).
 The definition given there is a bit different for reasons of efficiency.
 
-In a recent [preprint](http://arxiv.org/abs/1405.2441)
+In a recent [preprint](http://arxiv.org/abs/1405.2441),
 [Stuart Hannah](https://personal.cis.strath.ac.uk/stuart.a.hannah/) and I
 study upper-triangular matrices of ballots without empty rows.
 Those can be defined as follows:
@@ -86,9 +90,6 @@ Those can be defined as follows:
 ```haskell
 type Row a = [Bal a]
 type BalMat a = [Row a]
-
-balAlt :: Spe a (Bal a)
-balAlt = map fst . (list `o` nonEmpty set)
 
 rowOfLength :: Int -> Spe a (Row a)
 rowOfLength i = bal .^ i
@@ -100,7 +101,7 @@ balMat :: Spe a (BalMat a)
 balMat xs = assemble [ balMatOfDim k | k <- [0..length xs] ] xs
 ```
 
-Further, define the sign of a ballot matrices as:
+Further, define the sign of a ballot matrix:
 
 ```haskell
 sign :: BalMat a -> Int
