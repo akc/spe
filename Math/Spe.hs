@@ -92,7 +92,7 @@ genericPower h f k = genericProd h $ replicate k f
 -- | The ordinal power F^k for L-species F.
 (<^) = genericPower splitL
 
--- | The composition F(G) of two species F and G.
+-- | The (partitional) composition F(G) of two species F and G.
 compose :: Spe [a] b -> Spe a c -> Spe a (b, [c])
 compose f g xs = [ (y, ys) | bs <- par xs, y <- f bs, ys <- mapM g bs ]
 
@@ -166,8 +166,7 @@ cyc :: Spe a [a]
 cyc [] = []
 cyc (x:xs) = map (x:) $ list xs
 
--- | The species of permutations, where a permutation is a set of
--- cycles.
+-- | The species of permutations (sets of cycles).
 perm :: Spe a [[a]]
 perm = map fst . (set `o` cyc)
 
