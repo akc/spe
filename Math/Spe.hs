@@ -3,7 +3,7 @@
 -- Maintainer  : Anders Claesson <anders.claesson@gmail.com>
 -- License     : BSD-3
 --
--- Species lite
+-- Species lite. See <http://github.com/akc/spe> for an introduction and examples.
 
 module Math.Spe
     (

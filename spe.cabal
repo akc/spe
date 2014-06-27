@@ -1,11 +1,14 @@
 name:                spe
-version:             0.5
+version:             0.5.1
 synopsis:            Combinatorial species lite
 
 description:         A simple library for combinatorial species with no
-                     dependencies but base. If you want something more
-                     substantial, then you will most likely be happier
-                     with the excellent species package by Brent Yorgey:
+                     dependencies but base. See <http://github.com/akc/spe>
+                     for an introduction and examples.                 
+
+		     If you want something more substantial, then you
+                     will most likely be happier with the excellent
+                     species package by Brent Yorgey:
                      <http://hackage.haskell.org/package/species>
 
 homepage:            http://github.com/akc/spe
