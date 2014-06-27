@@ -15,6 +15,8 @@ by Brent Yorgey.
 
 ### Octopodes
 
+![octopus](img/oct.png)
+
 An octopus is a cycle of nonempty lists:
 ```haskell
 oct = cyc `o` nonEmpty list

@@ -5,3 +5,4 @@ cabal-dev
 *.chi
 *.chs.h
 README.html
+tmp
