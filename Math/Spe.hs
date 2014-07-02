@@ -171,8 +171,8 @@ perm :: Spe a [[a]]
 perm = map fst . (set `o` cyc)
 
 -- | The species of k element subsets.
-kSubset :: Int -> Spe a ([a], [a])
-kSubset k = (set `ofSize` k) .*. set
+kSubset :: Int -> Spe a [a]
+kSubset k = map fst . (set `ofSize` k .*. set)
 
 -- | The species of subsets.
 subset :: Spe a [a]
