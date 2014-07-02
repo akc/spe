@@ -6,11 +6,6 @@ For a quick taste, look at the examples below. For further information, see the
 on Hackage, and the full (but short!) source code:
 [Math/Spe.hs](https://github.com/akc/spe/blob/master/Math/Spe.hs).
 
-If you want something more substantial, then you will most likely be
-happier with the excellent
-[`species` package](http://hackage.haskell.org/package/species)
-by Brent Yorgey.
-
 ## Examples
 
 ### Octopodes
@@ -62,18 +57,19 @@ lists (linear orders):
 ### Ballot matrices
 
 A ballot (or ordered set partition) is a list of blocks, where a block
-is simply a nonempty set.
+is simply a nonempty set. We may give it this type:
 
 ```haskell
 type Bal a = [[a]]
 ```
 
 The ballot species can be defined by ``list `o` nonEmpty set``. The type
-of this expression is ``Spe a ([[a]],[[a]])`` and it doesn't, however,
-directly fit the type we intended. Looking at the definition of
-partitional composition we realize that ``mapM (nonEmpty set) bs == bs``
-for any set partition `bs`. Thus the second component is redundant, and
-a better definition of the species of ballots would be
+of this expression, ``Spe a ([[a]],[[a]])``, doesn't, however, directly
+fit the type we intended. Looking at the definition of partitional
+composition in [Math/Spe.hs](https://github.com/akc/spe/blob/master/Math/Spe.hs)
+we realize that ``mapM (nonEmpty set) bs == bs`` for any set partition
+`bs`. Thus the second component is redundant, and a better definition of
+the species of ballots would be
 
 ```haskell
 bal :: Spe a (Bal a)
@@ -103,7 +99,7 @@ balMat :: Spe a (BalMat a)
 balMat xs = assemble [ balMatOfDim k | k <- [0..length xs] ] xs
 ```
 
-Further, define the sign of a ballot matrix:
+Further, we define the sign of a ballot matrix by
 
 ```haskell
 sign :: BalMat a -> Int
@@ -113,7 +109,7 @@ sign m = (-1)^(dim m + blk m)
     blk = length . concat . concat -- Total number of blocks
 ```
 
-Let us now count ballot matrices with respect to this sign:
+Let us count ballot matrices with respect to this sign:
 
 ```
 > [ sum . map sign $ balMat [1..n] | n<-[0..6] ]
@@ -132,3 +128,28 @@ N A079144 Number of labeled interval orders on n elements: (2+2)-free posets.
 
 In the aforementioned preprint we prove this surprising result using a
 sign reversing involution.
+
+# Notes
+
+## Transport of structure
+
+Assuming that `h . h' = h' . h = id`, we can define the transport of
+structure as follows.
+
+```haskell
+transport :: Functor f => (a -> b) -> (b -> a) -> Spe a (f a) -> Spe b (f b)
+transport h h' spe = map (fmap h) . spe . map h'
+```
+
+For this to work consistently we would, however, have to define some
+additional newtypes and functor instances. For instance, in
+`bal :: Spe a [[a]]` we would like `fmap` to map two levels deep instead
+of one level deep in `[[a]]`.
+
+## The `species` package by Brent Yorgey
+
+This species module was created for use in my own research. It is
+sufficient for my needs.  If you want something more substantial, then
+you will most likely be happier with the excellent
+[`species` package](http://hackage.haskell.org/package/species)
+by Brent Yorgey.
