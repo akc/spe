@@ -79,6 +79,17 @@ bTree xs = [ BNode v l r
            ]
 ```
 
+We could similary use the ordinal product to define increasing binary
+trees, also called min-heaps:
+
+```haskell
+heap :: Spe a (BTree a)
+heap [] = [ Empty ]
+heap xs = [ BNode v l r
+          | (v,(l,r)) <- x <*. (heap .*. heap) $ xs
+          ]
+```
+
 ### Derivatives
 
 The following expression evaluates to true and illustrates that the
