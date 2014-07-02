@@ -24,11 +24,46 @@ element. E.g, `[3,5,9,7]` is connected but `[2,4,1]` is not. Using the
 ordinal product we can define the L-species of connected lists by
 
 ```haskell
-listc = x <*. list
+clist = x <*. list
 ```
 
-in which `x` is the singleton species. Can you explain why the species
-`list` and `` set `o` listc `` are isomorphic?
+in which `x` is the singleton species.  Let us print a few of these
+connected lists to get a feeling for how this works:
+
+```
+> mapM_ print $ clist [2,5,6,9]
+(2,[9,6,5])
+(2,[9,5,6])
+(2,[6,9,5])
+(2,[6,5,9])
+(2,[5,9,6])
+(2,[5,6,9])
+```
+
+If we prefer to see these simply as lists rather than pairs, then we
+would define
+
+```haskell
+clist = map (uncurry (:)) . (x <*. list)
+```
+
+Indeed, with this definition we have
+
+```
+> mapM_ print $ clist [2,5,6,9]
+[2,9,6,5]
+[2,9,5,6]
+[2,6,9,5]
+[2,6,5,9]
+[2,5,9,6]
+[2,5,6,9]
+```
+
+You might wonder why these lists are called "connected". It has to do
+with species `list` and `` set `o` listc `` being isomorphic. In
+general, if `f` and `g` are species and `` f = set `o` g `` then `g` can
+be seen as components of `f`, and those components may be called
+connected `f`-structures.
 
 ### Binary trees
 
