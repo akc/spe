@@ -86,7 +86,7 @@ derivative of the species of cycles is isomorphic to the species of
 lists (linear orders):
 
 ```haskell
-(map catMaybes $ dX cyc [1..5]) == list [1..5]
+(map catMaybes $ dx cyc [1..5]) == list [1..5]
 ```
 
 ### Ballot matrices

@@ -10,7 +10,7 @@ module Math.Spe
     -- * The species type synonym
       Spe
     -- * Constructions
-    , (.+.), assemble, (.*.), (<*.), prod, ordinalProd, (.^), (<^), o, dX
+    , (.+.), assemble, (.*.), (<*.), prod, ordProd, (.^), (<^), o, dx
     , ofSize, nonEmpty
     -- * Specific species
     , set, one, x, kBal, bal, par, kList, list, cyc, perm, kSubset, subset
@@ -63,45 +63,43 @@ splitB (x:xs) = splitB xs >>= \(ys, zs) -> [(x:ys, zs), (ys, x:zs)]
 assemble :: [Spe a c] -> Spe a c
 assemble fs xs = fs >>= \f -> f xs
 
-genericMul :: Splitter a -> Spe a b -> Spe a c -> Spe a (b,c)
-genericMul h f g xs = h xs >>= \(ys,zs) -> (,) <$> f ys <*> g zs
+mulBy :: Splitter a -> Spe a b -> Spe a c -> Spe a (b,c)
+mulBy h f g xs = h xs >>= \(ys,zs) -> (,) <$> f ys <*> g zs
 
 -- | Species multiplication.
-(.*.) = genericMul splitB
+(.*.) = mulBy splitB
 
 -- | Ordinal L-species multiplication. Give that the underlying set is
 -- sorted , elements in the left factor will be smaller than those in
 -- the right factor.
-(<*.) = genericMul splitL
+(<*.) = mulBy splitL
 
-genericProd :: Splitter a -> [Spe a b] -> Spe a [b]
-genericProd h fs xs =
-    let n = length fs
-    in [ zipWith ($) fs bs | bs <- decompose h n xs ] >>= sequence
+prodBy :: Splitter a -> [Spe a b] -> Spe a [b]
+prodBy h fs xs = zipWith ($) fs <$> decompose h (length fs) xs >>= sequence
 
 -- | The product of a list of species.
-prod = genericProd splitB
+prod = prodBy splitB
 
 -- | The ordinal product of a list of L-species.
-ordinalProd = genericProd splitL
+ordProd = prodBy splitL
 
-genericPower :: Splitter a -> Spe a b -> Int -> Spe a [b]
-genericPower h f k = genericProd h $ replicate k f
+powerBy :: Splitter a -> Spe a b -> Int -> Spe a [b]
+powerBy h f k = prodBy h $ replicate k f
 
 -- | The power F^k for species F.
-(.^) = genericPower splitB
+(.^) = powerBy splitB
 
 -- | The ordinal power F^k for L-species F.
-(<^) = genericPower splitL
+(<^) = powerBy splitL
 
 -- | The (partitional) composition F(G) of two species F and G. It is
 -- usually used infix.
 o :: Spe [a] b -> Spe a c -> Spe a (b, [c])
-o f g xs = [ (y, ys) | bs <- par xs, y <- f bs, ys <- mapM g bs ]
+o f g xs = par xs >>= \bs -> (,) <$> f bs <*> mapM g bs
 
 -- | The derivative d/dX F of a species F.
-dX :: Spe (Maybe a) b -> Spe a b
-dX f xs = f $ Nothing : (Just <$> xs)
+dx :: Spe (Maybe a) b -> Spe a b
+dx f xs = f $ Nothing : (Just <$> xs)
 
 -- Like length xs == n, but lazy.
 isOfLength :: [a] -> Int -> Bool
