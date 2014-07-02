@@ -174,6 +174,7 @@ perm = map fst . (set `o` cyc)
 kSubset :: Int -> Spe a [a]
 kSubset k = map fst . (set `ofSize` k .*. set)
 
--- | The species of subsets.
+-- | The species of subsets. The definition given here is equivalent to
+-- @subset = map fst . (set .*. set)@, but a bit faster.
 subset :: Spe a [a]
-subset = map fst . (set .*. set)
+subset = map fst . splitB
