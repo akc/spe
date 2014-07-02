@@ -17,7 +17,6 @@ module Math.Spe
     ) where
 
 import Data.List
-import Control.Monad
 import Control.Applicative
 
 infixl 6 .+.
