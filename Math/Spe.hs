@@ -16,7 +16,7 @@ module Math.Spe
     , set, one, x, kBal, bal, par, kList, list, cyc, perm, kSubset, subset
     ) where
 
-import Data.List
+import Control.Arrow
 import Control.Applicative
 
 infixl 6 .+.
@@ -34,25 +34,26 @@ infixr 8 <^
 -- approximate this by a function as defined.
 type Spe a c = [a] -> [c]
 
-type Splitter a = [a] -> [([a], [a])]
+type Bipartition a = [a] -> [([a], [a])]
 
 -- Constructions
 -- -------------
 
-decompose :: Splitter a -> Int -> [a] -> [[[a]]]
-decompose _ 0 [] = [[]]
-decompose _ 0 _  = []
-decompose h k xs = [ b:bs | (b,ys) <- h xs, bs <- decompose h (k-1) ys ]
+-- Preimages of endo functions [1..k] -> [1..n]
+kEndBy :: Bipartition a -> Int -> [a] -> [[[a]]]
+kEndBy _ 0 [] = [[]]
+kEndBy _ 0 _  = []
+kEndBy h k xs = h xs >>= \(b,ys) -> (b:) <$> kEndBy h (k-1) ys
 
--- A splitter for L-species.
-splitL :: Splitter a
-splitL [] = [([], [])]
-splitL xs@(x:xt) = ([], xs) : [ (x:as, bs) | (as, bs) <- splitL xt ]
+-- A bipartition for L-species.
+bipartL :: Bipartition a
+bipartL [] = [([], [])]
+bipartL xs@(x:xt) = ([], xs) : (first (x:) <$> bipartL xt)
 
--- A splitter for B-species.
-splitB :: Splitter a
-splitB [] = [([], [])]
-splitB (x:xs) = splitB xs >>= \(ys, zs) -> [(x:ys, zs), (ys, x:zs)]
+-- A bipartition for B-species.
+bipartB :: Bipartition a
+bipartB [] = [([], [])]
+bipartB (x:xs) = bipartB xs >>= \(ys, zs) -> [(x:ys, zs), (ys, x:zs)]
 
 -- | Species addition.
 (.+.) :: Spe a b -> Spe a c -> Spe a (Either b c)
@@ -62,34 +63,34 @@ splitB (x:xs) = splitB xs >>= \(ys, zs) -> [(x:ys, zs), (ys, x:zs)]
 assemble :: [Spe a c] -> Spe a c
 assemble fs xs = fs >>= \f -> f xs
 
-mulBy :: Splitter a -> Spe a b -> Spe a c -> Spe a (b,c)
-mulBy h f g xs = h xs >>= \(ys,zs) -> (,) <$> f ys <*> g zs
+mulBy :: Bipartition a -> Spe a b -> Spe a c -> Spe a (b,c)
+mulBy h f g xs = h xs >>= uncurry (liftA2 (,)) . (f *** g)
 
 -- | Species multiplication.
-(.*.) = mulBy splitB
+(.*.) = mulBy bipartB
 
 -- | Ordinal L-species multiplication. Give that the underlying set is
 -- sorted , elements in the left factor will be smaller than those in
 -- the right factor.
-(<*.) = mulBy splitL
+(<*.) = mulBy bipartL
 
-prodBy :: Splitter a -> [Spe a b] -> Spe a [b]
-prodBy h fs xs = zipWith ($) fs <$> decompose h (length fs) xs >>= sequence
+prodBy :: Bipartition a -> [Spe a b] -> Spe a [b]
+prodBy h fs xs = zipWith ($) fs <$> kEndBy h (length fs) xs >>= sequence
 
 -- | The product of a list of species.
-prod = prodBy splitB
+prod = prodBy bipartB
 
 -- | The ordinal product of a list of L-species.
-ordProd = prodBy splitL
+ordProd = prodBy bipartL
 
-powerBy :: Splitter a -> Spe a b -> Int -> Spe a [b]
+powerBy :: Bipartition a -> Spe a b -> Int -> Spe a [b]
 powerBy h f k = prodBy h $ replicate k f
 
 -- | The power F^k for species F.
-(.^) = powerBy splitB
+(.^) = powerBy bipartB
 
 -- | The ordinal power F^k for L-species F.
-(<^) = powerBy splitL
+(<^) = powerBy bipartL
 
 -- | The (partitional) composition F(G) of two species F and G. It is
 -- usually used infix.
@@ -140,12 +141,12 @@ kBal k = nonEmpty set .^ k
 -- | The species of ballots.
 bal :: Spe a [[a]]
 bal [] = [[]]
-bal xs = [ b:bs | (b, ys) <- init (splitB xs), bs <- bal ys ]
+bal xs = [ b:bs | (b, ys) <- init (bipartB xs), bs <- bal ys ]
 
 -- | The species of set partitions.
 par :: Spe a [[a]]
 par [] = [[]]
-par (x:xs) = [ (x:b) : bs | (b, ys) <- splitB xs, bs <- par ys ]
+par (x:xs) = [ (x:b) : bs | (b, ys) <- bipartB xs, bs <- par ys ]
 
 -- | The species of lists (linear orders) with k elements.
 kList :: Int -> Spe a [a]
@@ -171,4 +172,4 @@ kSubset k = map fst . (set `ofSize` k .*. set)
 -- | The species of subsets. The definition given here is equivalent to
 -- @subset = map fst . (set .*. set)@, but a bit faster.
 subset :: Spe a [a]
-subset = map fst . splitB
+subset = map fst . bipartB
