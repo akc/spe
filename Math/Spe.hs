@@ -10,13 +10,15 @@ module Math.Spe
     -- * The species type synonym
       Spe
     -- * Constructions
-    , (.+.), assemble, (.*.), (<*.), prod, ordinalProd, (.^), (<^)
-    , compose, o , kDiff, diff, ofSize, nonEmpty
+    , (.+.), assemble, (.*.), (<*.), prod, ordinalProd, (.^), (<^), o, dX
+    , ofSize, nonEmpty
     -- * Specific species
     , set, one, x, kBal, bal, par, kList, list, cyc, perm, kSubset, subset
     ) where
 
 import Data.List
+import Control.Monad
+import Control.Applicative
 
 infixl 6 .+.
 infixl 7 .*.
@@ -55,14 +57,14 @@ splitB (x:xs) = splitB xs >>= \(ys, zs) -> [(x:ys, zs), (ys, x:zs)]
 
 -- | Species addition.
 (.+.) :: Spe a b -> Spe a c -> Spe a (Either b c)
-(.+.) f g xs = map Left (f xs) ++ map Right (g xs)
+(.+.) f g xs = (Left <$> f xs) ++ (Right <$> g xs)
 
 -- | The sum of a list of species of the same type.
 assemble :: [Spe a c] -> Spe a c
 assemble fs xs = fs >>= \f -> f xs
 
 genericMul :: Splitter a -> Spe a b -> Spe a c -> Spe a (b,c)
-genericMul h f g xs = [ (y, z) | (ys, zs) <- h xs, y <- f ys, z <- g zs ]
+genericMul h f g xs = h xs >>= \(ys,zs) -> (,) <$> f ys <*> g zs
 
 -- | Species multiplication.
 (.*.) = genericMul splitB
@@ -92,19 +94,14 @@ genericPower h f k = genericProd h $ replicate k f
 -- | The ordinal power F^k for L-species F.
 (<^) = genericPower splitL
 
--- | The (partitional) composition F(G) of two species F and G.
-compose :: Spe [a] b -> Spe a c -> Spe a (b, [c])
-compose f g xs = [ (y, ys) | bs <- par xs, y <- f bs, ys <- mapM g bs ]
+-- | The (partitional) composition F(G) of two species F and G. It is
+-- usually used infix.
+o :: Spe [a] b -> Spe a c -> Spe a (b, [c])
+o f g xs = [ (y, ys) | bs <- par xs, y <- f bs, ys <- mapM g bs ]
 
--- | This is just a synonym for `compose`. It is usually used infix.
-o = compose
-
--- | The derivative d^k/dX^k F of a species F.
-kDiff :: Int -> Spe (Maybe a) b -> Spe a b
-kDiff k f xs = f $ replicate k Nothing ++ map Just xs
-
--- | The first derivative.
-diff = kDiff 1
+-- | The derivative d/dX F of a species F.
+dX :: Spe (Maybe a) b -> Spe a b
+dX f xs = f $ Nothing : (Just <$> xs)
 
 -- Like length xs == n, but lazy.
 isOfLength :: [a] -> Int -> Bool
@@ -164,7 +161,7 @@ list xs = kList (length xs) xs
 -- | The species of cycles.
 cyc :: Spe a [a]
 cyc [] = []
-cyc (x:xs) = map (x:) $ list xs
+cyc (x:xs) = (x:) <$> list xs
 
 -- | The species of permutations (sets of cycles).
 perm :: Spe a [[a]]

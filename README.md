@@ -60,10 +60,10 @@ Indeed, with this definition we have
 ```
 
 You might wonder why these lists are called "connected". It has to do
-with species `list` and `` set `o` listc `` being isomorphic. In
+with the species `list` and `` set `o` listc `` being isomorphic. In
 general, if `f` and `g` are species and `` f = set `o` g `` then `g` can
-be seen as components of `f`, and those components may be called
-connected `f`-structures.
+be seen as (connected) components of `f`, and those components may be
+called connected `f`-structures.
 
 ### Binary trees
 
@@ -72,10 +72,10 @@ Here's an example of a recursively defined species.
 ```haskell
 data BTree a = Empty | BNode a (BTree a) (BTree a) deriving (Show, Eq)
 
-btree :: Spe a (BTree a)
-btree [] = [ Empty ]
-btree xs = [ BNode v l r
-           | (v,(l,r)) <- x .*. (btree .*. btree) $ xs
+bTree :: Spe a (BTree a)
+bTree [] = [ Empty ]
+bTree xs = [ BNode v l r
+           | (v,(l,r)) <- x .*. (bTree .*. bTree) $ xs
            ]
 ```
 
@@ -86,23 +86,24 @@ derivative of the species of cycles is isomorphic to the species of
 lists (linear orders):
 
 ```haskell
-(map catMaybes $ diff cyc [1..5]) == list [1..5]
+(map catMaybes $ dX cyc [1..5]) == list [1..5]
 ```
 
 ### Ballot matrices
 
 A ballot (or ordered set partition) is a list of blocks, where a block
-is simply a nonempty set. We may give it this type:
+is simply a nonempty set. We may give ballots this type:
 
 ```haskell
 type Bal a = [[a]]
 ```
 
 The ballot species can be defined by ``list `o` nonEmpty set``. The type
-of this expression, ``Spe a ([[a]],[[a]])``, doesn't, however, directly
-fit the type we intended. Looking at the definition of partitional
-composition in [Math/Spe.hs](https://github.com/akc/spe/blob/master/Math/Spe.hs)
-we realize that ``mapM (nonEmpty set) bs == bs`` for any set partition
+of this expression, ``Spe a ([[a]],[[a]])``, is, however, a bit more
+complicated than we intended. Looking at the definition of partitional
+composition in
+[Math/Spe.hs](https://github.com/akc/spe/blob/master/Math/Spe.hs) we
+realize that ``mapM (nonEmpty set) bs == bs`` for any set partition
 `bs`. Thus the second component is redundant, and a better definition of
 the species of ballots would be
 
