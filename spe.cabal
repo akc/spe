@@ -27,3 +27,4 @@ source-repository head
 library
   exposed-modules:     Math.Spe
   build-depends:       base >=4.5 && <5
+  ghc-options:         -Wall

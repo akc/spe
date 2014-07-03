@@ -67,29 +67,35 @@ mulBy :: Bipartition a -> Spe a b -> Spe a c -> Spe a (b,c)
 mulBy h f g xs = h xs >>= uncurry (liftA2 (,)) . (f *** g)
 
 -- | Species multiplication.
+(.*.) :: Spe a b -> Spe a c -> Spe a (b, c)
 (.*.) = mulBy bipartB
 
 -- | Ordinal L-species multiplication. Give that the underlying set is
 -- sorted , elements in the left factor will be smaller than those in
 -- the right factor.
+(<*.) :: Spe a b -> Spe a c -> Spe a (b, c)
 (<*.) = mulBy bipartL
 
 prodBy :: Bipartition a -> [Spe a b] -> Spe a [b]
 prodBy h fs xs = zipWith ($) fs <$> kEndBy h (length fs) xs >>= sequence
 
 -- | The product of a list of species.
+prod :: [Spe a b] -> Spe a [b]
 prod = prodBy bipartB
 
 -- | The ordinal product of a list of L-species.
+ordProd :: [Spe a b] -> Spe a [b]
 ordProd = prodBy bipartL
 
 powerBy :: Bipartition a -> Spe a b -> Int -> Spe a [b]
 powerBy h f k = prodBy h $ replicate k f
 
 -- | The power F^k for species F.
+(.^) :: Spe a b -> Int -> Spe a [b]
 (.^) = powerBy bipartB
 
 -- | The ordinal power F^k for L-species F.
+(<^) :: Spe a b -> Int -> Spe a [b]
 (<^) = powerBy bipartL
 
 -- | The (partitional) composition F(G) of two species F and G. It is
@@ -104,7 +110,7 @@ dx f xs = f $ Nothing : (Just <$> xs)
 -- Like length xs == n, but lazy.
 isOfLength :: [a] -> Int -> Bool
 []     `isOfLength` n = n == 0
-(x:xs) `isOfLength` n = n > 0 && xs `isOfLength` (n-1)
+(_:xs) `isOfLength` n = n > 0 && xs `isOfLength` (n-1)
 
 -- | f `ofSize` n is like f on n element sets, but empty otherwise.
 ofSize :: Spe a c -> Int -> Spe a c
