@@ -125,7 +125,7 @@ One may note that `pointed f` is isomorphic `x .*. dx f`. For example,
 
 The Cartesian product `(><)` of two species *F* and *G* on a set *U* is
 obtained by superimposing both an *F*-structure and a *G*-structure on
-*U*. For instance, pointing can be expressed using the cartesian (and
+*U*. For instance, pointing can be expressed using the Cartesian (and
 the ordinary) species product:
 
 ``` haskell
