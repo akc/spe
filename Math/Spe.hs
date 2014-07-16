@@ -98,7 +98,7 @@ powerBy h f k = prodBy h $ replicate k f
 (<^) :: Spe a b -> Int -> Spe a [b]
 (<^) = powerBy bipartL
 
--- | The Cartesian product of two species,
+-- | The Cartesian product of two species.
 (><) :: Spe a b -> Spe a c -> Spe a (b,c)
 (><) f g xs = (,) <$> f xs <*> g xs
 
