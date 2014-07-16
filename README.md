@@ -100,6 +100,49 @@ lists (linear orders):
 (map catMaybes $ dx cyc [1..5]) == list [1..5]
 ```
 
+### Pointing
+
+A pointed *F*-structure is an *F*-structure together with a
+distinguished element (the element pointed at):
+
+```
+> mapM_ print $ pointed set [1..3]
+([1,2,3],1)
+([1,2,3],2)
+([1,2,3],3)
+```
+
+One may note that `pointed f` is isomorphic `x .*. dx f`. For example,
+
+```
+> mapM_ print $ (x .*. dx set) [1..3]
+(3,[Nothing,Just 1,Just 2])
+(2,[Nothing,Just 1,Just 3])
+(1,[Nothing,Just 2,Just 3])
+```
+
+### Cartesian product
+
+The Cartesian product `(><)` of two species *F* and *G* on a set *U* is
+obtained by superimposing both an *F*-structure and a *G*-structure on
+*U*. For instance, pointing can be expressed using the cartesian (and
+the ordinary) species product:
+
+``` haskell
+pointed f = f >< (x .*. set)
+```
+
+### Functorial composition
+
+The `Spe` package doesn't provide an operator for the functorial
+composition of species. This is because, for our definition of species,
+it coincides with the usual composition of functions. For instance, the
+species of simple undirected graphs can be defined like this:
+
+```haskell
+graph = subset . kSubset 2
+```
+
 ### Ballot matrices
 
 A ballot (or ordered set partition) is a list of blocks, where a block

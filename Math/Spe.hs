@@ -10,13 +10,12 @@ module Math.Spe
     -- * The species type synonym
       Spe
     -- * Constructions
-    , (.+.), assemble, (.*.), (<*.), prod, ordProd, (.^), (<^), o, dx
-    , ofSize, nonEmpty
+    , (.+.), assemble, (.*.), (<*.), prod, ordProd, (.^), (<^), (><), o
+    , dx, pointed, ofSize, nonEmpty
     -- * Specific species
     , set, one, x, kBal, bal, par, kList, list, cyc, perm, kSubset, subset
     ) where
 
-import Control.Arrow
 import Control.Applicative
 
 infixl 6 .+.
@@ -39,6 +38,14 @@ type Bipartition a = [a] -> [([a], [a])]
 -- Constructions
 -- -------------
 
+-- | Species addition.
+(.+.) :: Spe a b -> Spe a c -> Spe a (Either b c)
+(.+.) f g xs = (Left <$> f xs) ++ (Right <$> g xs)
+
+-- | The sum of a list of species of the same type.
+assemble :: [Spe a c] -> Spe a c
+assemble fs xs = fs >>= \f -> f xs
+
 -- Preimages of endo functions [1..k] -> [1..n]
 kEndBy :: Bipartition a -> Int -> [a] -> [[[a]]]
 kEndBy _ 0 [] = [[]]
@@ -48,23 +55,16 @@ kEndBy h k xs = h xs >>= \(b,ys) -> (b:) <$> kEndBy h (k-1) ys
 -- A bipartition for L-species.
 bipartL :: Bipartition a
 bipartL [] = [([], [])]
-bipartL xs@(x:xt) = ([], xs) : (first (x:) <$> bipartL xt)
+bipartL xs@(x:xt) = ([], xs) : [ (x:ys, zs) | (ys,zs) <- bipartL xt ]
 
 -- A bipartition for B-species.
 bipartB :: Bipartition a
 bipartB [] = [([], [])]
 bipartB (x:xs) = bipartB xs >>= \(ys, zs) -> [(x:ys, zs), (ys, x:zs)]
 
--- | Species addition.
-(.+.) :: Spe a b -> Spe a c -> Spe a (Either b c)
-(.+.) f g xs = (Left <$> f xs) ++ (Right <$> g xs)
-
--- | The sum of a list of species of the same type.
-assemble :: [Spe a c] -> Spe a c
-assemble fs xs = fs >>= \f -> f xs
-
+-- Generic species multiplication.
 mulBy :: Bipartition a -> Spe a b -> Spe a c -> Spe a (b,c)
-mulBy h f g xs = h xs >>= uncurry (liftA2 (,)) . (f *** g)
+mulBy h f g xs = h xs >>= \(ys,zs) -> (,) <$> f ys <*> g zs
 
 -- | Species multiplication.
 (.*.) :: Spe a b -> Spe a c -> Spe a (b, c)
@@ -98,14 +98,21 @@ powerBy h f k = prodBy h $ replicate k f
 (<^) :: Spe a b -> Int -> Spe a [b]
 (<^) = powerBy bipartL
 
+-- | The Cartesian product of two species,
+(><) :: Spe a b -> Spe a c -> Spe a (b,c)
+(><) f g xs = (,) <$> f xs <*> g xs
+
 -- | The (partitional) composition F(G) of two species F and G. It is
 -- usually used infix.
 o :: Spe [a] b -> Spe a c -> Spe a (b, [c])
-o f g xs = par xs >>= \bs -> (,) <$> f bs <*> mapM g bs
+o f g xs = par xs >>= f >< mapM g
 
 -- | The derivative d/dX F of a species F.
 dx :: Spe (Maybe a) b -> Spe a b
 dx f xs = f $ Nothing : (Just <$> xs)
+
+-- | The pointing operator.
+pointed f = f >< id
 
 -- Like length xs == n, but lazy.
 isOfLength :: [a] -> Int -> Bool
@@ -141,7 +148,6 @@ x = id `ofSize` 1
 
 -- | The species of ballots with k blocks
 kBal :: Int -> Spe a [[a]]
-kBal 0 = \xs -> [ [] | null xs ]
 kBal k = nonEmpty set .^ k
 
 -- | The species of ballots.
