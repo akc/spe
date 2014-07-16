@@ -112,6 +112,7 @@ dx :: Spe (Maybe a) b -> Spe a b
 dx f xs = f $ Nothing : (Just <$> xs)
 
 -- | The pointing operator.
+pointed :: Spe a b -> Spe a (b, a)
 pointed f = f >< id
 
 -- Like length xs == n, but lazy.
