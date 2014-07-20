@@ -141,7 +141,7 @@ set = return
 -- | The species characteristic of the empty set; the identity with
 -- respect to species multiplication.
 one :: Spe a ()
-one xs = [ () | null xs ]
+one = const [()] `ofSize` 0
 
 -- | The singleton species.
 x :: Spe a a
