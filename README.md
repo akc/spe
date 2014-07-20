@@ -1,5 +1,7 @@
 # The `spe` package &mdash; species lite
 
+[![Build Status](https://travis-ci.org/akc/spe.svg)](https://travis-ci.org/akc/spe)
+
 A simple library for combinatorial species with no dependencies but base.
 For a quick taste, look at the examples below. For further information, see the
 [reference documentation](http://hackage.haskell.org/package/spe)
