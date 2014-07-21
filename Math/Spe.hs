@@ -3,7 +3,8 @@
 -- Maintainer  : Anders Claesson <anders.claesson@gmail.com>
 -- License     : BSD-3
 --
--- Species lite. See <http://github.com/akc/spe> for an introduction and examples.
+-- Species lite. See <http://github.com/akc/spe>
+-- for an introduction and examples.
 
 module Math.Spe
     (
@@ -12,10 +13,13 @@ module Math.Spe
     -- * Constructions
     , (.+.), assemble, (.*.), (<*.), prod, ordProd, (.^), (<^), (><), o
     , dx, pointed, ofSize, nonEmpty
+    -- * Contact of order n
+    , contact
     -- * Specific species
     , set, one, x, kBal, bal, par, kList, list, cyc, perm, kSubset, subset
     ) where
 
+import Data.List
 import Control.Applicative
 
 infixl 6 .+.
@@ -23,6 +27,7 @@ infixl 7 .*.
 infixl 7 <*.
 infixr 8 .^
 infixr 8 <^
+
 
 -- The species type synonym
 -- ------------------------
@@ -35,36 +40,37 @@ type Spe a c = [a] -> [c]
 
 type Bipartition a = [a] -> [([a], [a])]
 
+
 -- Constructions
 -- -------------
 
 -- | Species addition.
 (.+.) :: Spe a b -> Spe a c -> Spe a (Either b c)
-(.+.) f g xs = (Left <$> f xs) ++ (Right <$> g xs)
+(.+.) f g us = (Left <$> f us) ++ (Right <$> g us)
 
 -- | The sum of a list of species of the same type.
 assemble :: [Spe a c] -> Spe a c
-assemble fs xs = fs >>= \f -> f xs
+assemble fs us = fs >>= \f -> f us
 
 -- Preimages of endo functions [1..k] -> [1..n]
 kEndBy :: Bipartition a -> Int -> [a] -> [[[a]]]
 kEndBy _ 0 [] = [[]]
 kEndBy _ 0 _  = []
-kEndBy h k xs = h xs >>= \(b,ys) -> (b:) <$> kEndBy h (k-1) ys
+kEndBy h k us = h us >>= \(b,vs) -> (b:) <$> kEndBy h (k-1) vs
 
 -- A bipartition for L-species.
 bipartL :: Bipartition a
 bipartL [] = [([], [])]
-bipartL xs@(x:xt) = ([], xs) : [ (x:ys, zs) | (ys,zs) <- bipartL xt ]
+bipartL us@(u:ut) = ([], us) : [ (u:vs, zs) | (vs, zs) <- bipartL ut ]
 
 -- A bipartition for B-species.
 bipartB :: Bipartition a
 bipartB [] = [([], [])]
-bipartB (x:xs) = bipartB xs >>= \(ys, zs) -> [(x:ys, zs), (ys, x:zs)]
+bipartB (u:us) = bipartB us >>= \(vs, zs) -> [(u:vs, zs), (vs, u:zs)]
 
 -- Generic species multiplication.
 mulBy :: Bipartition a -> Spe a b -> Spe a c -> Spe a (b,c)
-mulBy h f g xs = h xs >>= \(ys,zs) -> (,) <$> f ys <*> g zs
+mulBy h f g us = h us >>= \(vs,zs) -> (,) <$> f vs <*> g zs
 
 -- | Species multiplication.
 (.*.) :: Spe a b -> Spe a c -> Spe a (b, c)
@@ -77,7 +83,7 @@ mulBy h f g xs = h xs >>= \(ys,zs) -> (,) <$> f ys <*> g zs
 (<*.) = mulBy bipartL
 
 prodBy :: Bipartition a -> [Spe a b] -> Spe a [b]
-prodBy h fs xs = zipWith ($) fs <$> kEndBy h (length fs) xs >>= sequence
+prodBy h fs us = zipWith ($) fs <$> kEndBy h (length fs) us >>= sequence
 
 -- | The product of a list of species.
 prod :: [Spe a b] -> Spe a [b]
@@ -100,35 +106,43 @@ powerBy h f k = prodBy h $ replicate k f
 
 -- | The Cartesian product of two species.
 (><) :: Spe a b -> Spe a c -> Spe a (b,c)
-(><) f g xs = (,) <$> f xs <*> g xs
+(><) f g us = (,) <$> f us <*> g us
 
 -- | The (partitional) composition F(G) of two species F and G. It is
 -- usually used infix.
 o :: Spe [a] b -> Spe a c -> Spe a (b, [c])
-o f g xs = par xs >>= f >< mapM g
+o f g us = par us >>= f >< mapM g
 
 -- | The derivative d/dX F of a species F.
 dx :: Spe (Maybe a) b -> Spe a b
-dx f xs = f $ Nothing : (Just <$> xs)
+dx f us = f $ Nothing : (Just <$> us)
 
 -- | The pointing operator.
 pointed :: Spe a b -> Spe a (b, a)
 pointed f = f >< id
 
--- Like length xs == n, but lazy.
+-- Like length us == n, but lazy.
 isOfLength :: [a] -> Int -> Bool
 []     `isOfLength` n = n == 0
-(_:xs) `isOfLength` n = n > 0 && xs `isOfLength` (n-1)
+(_:us) `isOfLength` n = n > 0 && us `isOfLength` (n-1)
 
 -- | f `ofSize` n is like f on n element sets, but empty otherwise.
 ofSize :: Spe a c -> Int -> Spe a c
-(f `ofSize` n) xs | xs `isOfLength` n = f xs
+(f `ofSize` n) us | us `isOfLength` n = f us
                   | otherwise         = []
 
 -- | No structure on the empty set, but otherwise the same.
 nonEmpty :: Spe a c -> Spe a c
 nonEmpty _ [] = []
-nonEmpty f xs = f xs
+nonEmpty f us = f us
+
+
+-- Contact of order n
+-- ------------------
+
+-- | Check whether two species have contact of order n.
+contact :: Ord b => Int -> Spe Int b -> Spe Int b -> Bool
+contact n f g = and [ sort (f [1..k]) == sort (g [1..k]) | k<-[1..n] ]
 
 
 -- Specific species
@@ -154,12 +168,12 @@ kBal k = nonEmpty set .^ k
 -- | The species of ballots.
 bal :: Spe a [[a]]
 bal [] = [[]]
-bal xs = [ b:bs | (b, ys) <- init (bipartB xs), bs <- bal ys ]
+bal us = [ b:bs | (b, vs) <- init (bipartB us), bs <- bal vs ]
 
 -- | The species of set partitions.
 par :: Spe a [[a]]
 par [] = [[]]
-par (x:xs) = [ (x:b) : bs | (b, ys) <- bipartB xs, bs <- par ys ]
+par (u:us) = [ (u:b) : bs | (b, vs) <- bipartB us, bs <- par vs ]
 
 -- | The species of lists (linear orders) with k elements.
 kList :: Int -> Spe a [a]
@@ -167,12 +181,12 @@ kList k = x .^ k
 
 -- | The species of lists (linear orders)
 list :: Spe a [a]
-list xs = kList (length xs) xs
+list us = kList (length us) us
 
 -- | The species of cycles.
 cyc :: Spe a [a]
 cyc [] = []
-cyc (x:xs) = (x:) <$> list xs
+cyc (u:us) = (u:) <$> list us
 
 -- | The species of permutations (sets of cycles).
 perm :: Spe a [[a]]
