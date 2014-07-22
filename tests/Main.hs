@@ -32,6 +32,12 @@ main = passOrFail
         , rhs  = list
         , iso  = catMaybes
         }
+    , checkContact 5 Equality
+        { name = "list .*. list ~= dx list"
+        , lhs  = list .*. list
+        , rhs  = dx list
+        , iso  = \(us, vs) -> map Just us ++ Nothing : map Just vs
+        }
     , checkContact 12 Equality
         { name = "pointed set ~= x .*. dx set"
         , lhs  = pointed set
@@ -39,25 +45,25 @@ main = passOrFail
         , iso  = \(us, u) -> (u, Nothing : map Just (us \\ [u]))
         }
     , checkContact 8 Equality
-        { name = "pointed set ~= set >< (x .*. set)"
+        { name = "set >< (x .*. set) ~= pointed set"
         , lhs  = set >< (x .*. set)
         , rhs  = pointed set
         , iso  = \(p, (u,_)) -> (p, u)
         }
     , checkContact 8 Equality
-        { name = "pointed par ~= par >< (x .*. set)"
+        { name = "par >< (x .*. set) ~= pointed par"
         , lhs  = par >< (x .*. set)
         , rhs  = pointed par
         , iso  = \(p, (u,_)) -> (p, u)
         }
     , checkContact 8 Equality
-        { name = "par ~= set `o` nonEmpty set"
+        { name = "set `o` nonEmpty set ~= par"
         , lhs  = set `o` nonEmpty set
         , rhs  = par
         , iso  = fst
         }
     , checkContact 6 Equality
-        { name = "bal ~= list `o` nonEmpty set"
+        { name = "list `o` nonEmpty set ~= bal"
         , lhs  = list `o` nonEmpty set
         , rhs  = bal
         , iso  = fst
