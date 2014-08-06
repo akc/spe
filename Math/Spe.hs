@@ -28,7 +28,6 @@ infixl 7 <*.
 infixr 8 .^
 infixr 8 <^
 
-
 -- The species type synonym
 -- ------------------------
 
@@ -38,8 +37,7 @@ infixr 8 <^
 -- approximate this by a function as defined.
 type Spe a c = [a] -> [c]
 
-type Bipartition a = [a] -> [([a], [a])]
-
+type BiPar a = Spe a ([a], [a])
 
 -- Constructions
 -- -------------
@@ -52,57 +50,65 @@ type Bipartition a = [a] -> [([a], [a])]
 assemble :: [Spe a c] -> Spe a c
 assemble fs us = fs >>= \f -> f us
 
--- Preimages of endo functions [1..k] -> [1..n]
-kEndBy :: Bipartition a -> Int -> [a] -> [[[a]]]
-kEndBy _ 0 [] = [[]]
-kEndBy _ 0 _  = []
-kEndBy h k us = h us >>= \(b,vs) -> (b:) <$> kEndBy h (k-1) vs
-
 -- A bipartition for L-species.
-bipartL :: Bipartition a
-bipartL [] = [([], [])]
-bipartL us@(u:ut) = ([], us) : [ (u:vs, zs) | (vs, zs) <- bipartL ut ]
+biparL :: BiPar a
+biparL [] = [([], [])]
+biparL us@(u:ut) = ([], us) : [ (u:vs, zs) | (vs, zs) <- biparL ut ]
 
 -- A bipartition for B-species.
-bipartB :: Bipartition a
-bipartB [] = [([], [])]
-bipartB (u:us) = bipartB us >>= \(vs, zs) -> [(u:vs, zs), (vs, u:zs)]
+biparB :: BiPar a
+biparB [] = [([], [])]
+biparB (u:us) = biparB us >>= \(vs, zs) -> [(u:vs, zs), (vs, u:zs)]
 
 -- Generic species multiplication.
-mulBy :: Bipartition a -> Spe a b -> Spe a c -> Spe a (b,c)
-mulBy h f g us = h us >>= \(vs,zs) -> (,) <$> f vs <*> g zs
+mul :: BiPar a -> Spe a b -> Spe a c -> Spe a (b,c)
+mul h f g us = h us >>= \(vs,zs) -> (,) <$> f vs <*> g zs
 
 -- | Species multiplication.
 (.*.) :: Spe a b -> Spe a c -> Spe a (b, c)
-(.*.) = mulBy bipartB
+(.*.) = mul biparB
 
--- | Ordinal L-species multiplication. Give that the underlying set is
--- sorted , elements in the left factor will be smaller than those in
--- the right factor.
+-- | Ordinal L-species multiplication. Given that the underlying set is
+-- sorted, elements in the left factor will be smaller than those in the
+-- right factor.
 (<*.) :: Spe a b -> Spe a c -> Spe a (b, c)
-(<*.) = mulBy bipartL
+(<*.) = mul biparL
 
-prodBy :: Bipartition a -> [Spe a b] -> Spe a [b]
-prodBy h fs us = zipWith ($) fs <$> kEndBy h (length fs) us >>= sequence
+-- Generic species product. The definition below is equivalent to
+-- > prod' h = foldr (\f g -> map (uncurry (:)) . mul h f g) one
+-- but a bit more efficient.
+prod' :: BiPar a -> [Spe a b] -> Spe a [b]
+prod' h fs us = zipWith ($) fs <$> kEnd h (length fs) us >>= sequence
+
+-- Preimages of endo functions [1..k] -> us. (Used in prod'.)
+kEnd :: BiPar a -> Int -> Spe a [[a]]
+kEnd _ 0 [] = [[]]
+kEnd _ 0 _  = []
+kEnd h k us = h us >>= \(b,vs) -> (b:) <$> kEnd h (k-1) vs
+
+-- Generic species power function, using peasant multiplication.
+power :: BiPar a -> Spe a b -> Int -> Spe a [b]
+power _ _ 0 = one
+power _ f 1 = map return . f
+power h f k = map concat . prod' h [power h f j, g, g]
+  where
+    (i,j) = divMod k 2; g = power h f i
 
 -- | The product of a list of species.
 prod :: [Spe a b] -> Spe a [b]
-prod = prodBy bipartB
+prod = prod' biparB
 
 -- | The ordinal product of a list of L-species.
 ordProd :: [Spe a b] -> Spe a [b]
-ordProd = prodBy bipartL
-
-powerBy :: Bipartition a -> Spe a b -> Int -> Spe a [b]
-powerBy h f k = prodBy h $ replicate k f
+ordProd = prod' biparL
 
 -- | The power F^k for species F.
 (.^) :: Spe a b -> Int -> Spe a [b]
-(.^) = powerBy bipartB
+(.^) = power biparB
 
 -- | The ordinal power F^k for L-species F.
 (<^) :: Spe a b -> Int -> Spe a [b]
-(<^) = powerBy bipartL
+(<^) = power biparL
 
 -- | The Cartesian product of two species.
 (><) :: Spe a b -> Spe a c -> Spe a (b,c)
@@ -136,14 +142,12 @@ nonEmpty :: Spe a c -> Spe a c
 nonEmpty _ [] = []
 nonEmpty f us = f us
 
-
 -- Contact of order n
 -- ------------------
 
 -- | Check whether two species have contact of order n.
 contact :: Ord b => Int -> Spe Int b -> Spe Int b -> Bool
 contact n f g = and [ sort (f [1..k]) == sort (g [1..k]) | k<-[1..n] ]
-
 
 -- Specific species
 -- ----------------
@@ -154,32 +158,32 @@ set = return
 
 -- | The species characteristic of the empty set; the identity with
 -- respect to species multiplication.
-one :: Spe a ()
-one = const [()] `ofSize` 0
+one :: Spe a [b]
+one us = [ [] | null us ]
 
 -- | The singleton species.
 x :: Spe a a
 x = id `ofSize` 1
 
--- | The species of ballots with k blocks
+-- | The species of ballots with k blocks.
 kBal :: Int -> Spe a [[a]]
 kBal k = nonEmpty set .^ k
 
 -- | The species of ballots.
 bal :: Spe a [[a]]
 bal [] = [[]]
-bal us = [ b:bs | (b, vs) <- init (bipartB us), bs <- bal vs ]
+bal us = [ b:bs | (b, vs) <- init (biparB us), bs <- bal vs ]
 
 -- | The species of set partitions.
 par :: Spe a [[a]]
 par [] = [[]]
-par (u:us) = [ (u:b) : bs | (b, vs) <- bipartB us, bs <- par vs ]
+par (u:us) = [ (u:b) : bs | (b, vs) <- biparB us, bs <- par vs ]
 
 -- | The species of lists (linear orders) with k elements.
 kList :: Int -> Spe a [a]
 kList k = x .^ k
 
--- | The species of lists (linear orders)
+-- | The species of lists (linear orders).
 list :: Spe a [a]
 list us = kList (length us) us
 
@@ -197,6 +201,6 @@ kSubset :: Int -> Spe a [a]
 kSubset k = map fst . (set `ofSize` k .*. set)
 
 -- | The species of subsets. The definition given here is equivalent to
--- @subset = map fst . (set .*. set)@, but a bit faster.
+-- @subset = map fst . (set .*. set)@, but a bit more efficient.
 subset :: Spe a [a]
-subset = map fst . bipartB
+subset = map fst . biparB
