@@ -88,9 +88,10 @@ kEnd h k us = h us >>= \(b,vs) -> (b:) <$> kEnd h (k-1) vs
 
 -- Generic species power function, using peasant multiplication.
 power :: BiPar a -> Spe a b -> Int -> Spe a [b]
-power _ _ 0 = one
-power _ f 1 = map return . f
-power h f k = map concat . prod' h [power h f j, g, g]
+power _ _ k | k < 0 = error "Negative exponent"
+power _ _ 0         = one
+power _ f 1         = map return . f
+power h f k         = map concat . prod' h [power h f j, g, g]
   where
     (i,j) = divMod k 2; g = power h f i
 
