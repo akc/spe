@@ -11,12 +11,13 @@ module Math.Spe
     -- * The species type synonym
       Spe
     -- * Constructions
-    , (.+.), assemble, (.*.), (<*.), prod, ordProd, (.^), (<^), (><), o
+    , (.+.), assemble, (.*.), (<*.), prod, ordProd, (.^), (<^), (><), o, ordComp
     , dx, pointed, ofSize, nonEmpty
     -- * Contact of order n
     , contact
     -- * Specific species
     , set, one, x, kBal, bal, par, kList, list, cyc, perm, kSubset, subset
+    , parL
     ) where
 
 import Data.List
@@ -120,6 +121,10 @@ ordProd = prod' biparL
 o :: Spe [a] b -> Spe a c -> Spe a (b, [c])
 o f g us = par us >>= f >< mapM g
 
+-- | The (partitional) L-species composition of two species.
+ordComp :: Spe [a] b -> Spe a c -> Spe a (b, [c])
+ordComp f g us = parL us >>= f >< mapM g
+
 -- | The derivative d/dX F of a species F.
 dx :: Spe (Maybe a) b -> Spe a b
 dx f us = f $ Nothing : (Just <$> us)
@@ -179,6 +184,11 @@ bal us = [ b:bs | (b, vs) <- init (biparB us), bs <- bal vs ]
 par :: Spe a [[a]]
 par [] = [[]]
 par (u:us) = [ (u:b) : bs | (b, vs) <- biparB us, bs <- par vs ]
+
+-- | The L-species of set partitions.
+parL :: Spe a [[a]]
+parL [] = [[]]
+parL (u:us) = [ (u:b) : bs | (b, vs) <- biparL us, bs <- parL vs ]
 
 -- | The species of lists (linear orders) with k elements.
 kList :: Int -> Spe a [a]
